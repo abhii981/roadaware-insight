@@ -109,17 +109,55 @@ const PredictRisk = () => {
     setForm((p) => ({ ...p, [key]: value }));
 
   const handleSubmit = async () => {
-    setLoading(true);
-    setResult(null);
-    try {
-      const res = await api.post<PredictionResult>("/predict", form);
-      setResult(res.data);
-    } catch (e: any) {
-      toast.error(e.message ?? "Prediction failed. Make sure backend is running.");
-    } finally {
-      setLoading(false);
-    }
-  };
+  setLoading(true);
+  setResult(null);
+
+  try {
+    // ONLY mapping names — UI stays untouched
+    const payload = {
+      city: form.city,
+      weather: form.weather,
+      visibility: form.visibility,
+      road_type: form.road_type,
+      traffic_density: form.traffic_density,
+      day_of_week: form.day_of_week,
+      festival: form.festival,
+
+      cause: form.primary_cause,
+
+      hour: Number(form.hour),
+      temperature: Number(form.temperature),
+      lanes: Number(form.lanes),
+      vehicles_involved: Number(form.vehicles_involved),
+      casualties: Number(form.casualties),
+      risk_score: Number(form.risk_score),
+
+      is_weekend: Boolean(form.weekend),
+      is_peak_hour: Boolean(form.peak_hour),
+      traffic_signal: Boolean(form.traffic_signal)
+    };
+
+    console.log("Payload:", payload);
+
+    const res = await api.post<PredictionResult>(
+      "/predict",
+      payload
+    );
+
+    setResult(res.data);
+
+  } catch (e: any) {
+    console.error(e);
+
+    toast.error(
+      e?.response?.data?.detail ||
+      "Prediction failed"
+    );
+
+  } finally {
+    setLoading(false);
+  }
+};
 
   const riskMeta = (lvl?: string) => {
     if (lvl === "HIGH") return { color: "text-destructive", bg: "bg-destructive/10", border: "border-destructive/40", icon: ShieldAlert };

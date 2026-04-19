@@ -51,7 +51,7 @@ const ModelPerformance = () => {
     );
   }
 
-  const fmt = (v: number) => (v != null ? `${(v * 100).toFixed(1)}%` : "—");
+  const fmt = (v: number) => (v != null ? `${(v).toFixed(1)}%` : "—");
 
   return (
     <div className="space-y-8">
