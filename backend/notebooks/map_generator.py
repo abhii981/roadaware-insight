@@ -7,17 +7,15 @@ import os
 from branca.colormap import LinearColormap
 
 print("🗺️ Generating Enhanced Hotspot Map...")
-
-# Load data
 df = pd.read_csv('data/indian_roads_dataset.csv')
 df['festival'] = df['festival'].fillna('none')
 
-# Load clustered data
+
 clustered = joblib.load('models/clustered_data.pkl')
 df['cluster_kmeans'] = clustered['cluster_kmeans'].values
 df['cluster_dbscan'] = clustered['cluster_dbscan'].values
 
-# Create base map with multiple tile layers
+
 m = folium.Map(
     location=[20.5937, 78.9629],
     zoom_start=5,
@@ -25,20 +23,19 @@ m = folium.Map(
     control_scale=True
 )
 
-# Add different tile layers
 folium.TileLayer('OpenStreetMap').add_to(m)
 folium.TileLayer('CartoDB dark_matter').add_to(m)
 
-# Create feature groups for better organization
+
 heatmap_group = folium.FeatureGroup(name='🔥 Risk Heatmap')
 cluster_group = folium.FeatureGroup(name='📍 Accident Clusters')
 fatal_group = folium.FeatureGroup(name='⚠️ Fatal Accidents')
 city_group = folium.FeatureGroup(name='🏙️ City Analysis')
 
-# 1. Enhanced Heatmap with weighted risk
+
 heat_data = []
 for _, row in df.iterrows():
-    # Weight by risk score
+    
     weight = row['risk_score'] * 2
     if row['accident_severity'] == 'fatal':
         weight *= 1.5
@@ -53,7 +50,7 @@ HeatMap(
     gradient={0.2: 'blue', 0.4: 'cyan', 0.6: 'yellow', 0.8: 'orange', 1.0: 'red'}
 ).add_to(heatmap_group)
 
-# 2. Cluster visualization with enhanced styling
+
 cluster_colors = {
     0: '#FF6B6B', 1: '#4ECDC4', 2: '#45B7D1', 
     3: '#96CEB4', 4: '#FFEAA7', 5: '#DDA0DD',
@@ -63,7 +60,7 @@ cluster_colors = {
 for cluster_id in sorted(df['cluster_kmeans'].unique()):
     cluster_df = df[df['cluster_kmeans'] == cluster_id]
     
-    if len(cluster_df) < 5:  # Skip very small clusters
+    if len(cluster_df) < 5:  
         continue
     
     center_lat = cluster_df['latitude'].mean()
@@ -72,7 +69,7 @@ for cluster_id in sorted(df['cluster_kmeans'].unique()):
     avg_risk = cluster_df['risk_score'].mean()
     fatal_count = (cluster_df['accident_severity'] == 'fatal').sum()
     
-    # Create detailed popup
+    
     popup_html = f"""
     <div style="font-family: Arial, sans-serif; min-width: 200px;">
         <h4 style="margin: 0 0 10px; color: #333;">📍 Cluster {cluster_id}</h4>
@@ -89,7 +86,7 @@ for cluster_id in sorted(df['cluster_kmeans'].unique()):
     </div>
     """
     
-    # Add cluster marker
+  
     folium.CircleMarker(
         location=[center_lat, center_lon],
         radius=min(30, 10 + count/100),
@@ -101,7 +98,7 @@ for cluster_id in sorted(df['cluster_kmeans'].unique()):
         tooltip=f"Cluster {cluster_id}: {count} accidents, Risk: {avg_risk:.2f}"
     ).add_to(cluster_group)
 
-# 3. Fatal accidents with detailed information
+
 fatal_df = df[df['accident_severity'] == 'fatal'].sample(
     min(500, len(df[df['accident_severity'] == 'fatal'])), random_state=42
 )
@@ -159,17 +156,15 @@ for city, row in city_stats.iterrows():
         tooltip=f"{city} - {row['total_accidents']} accidents",
         icon=folium.Icon(color='blue', icon='info-sign')
     ).add_to(city_group)
-
-# Add all feature groups to map
 heatmap_group.add_to(m)
 cluster_group.add_to(m)
 fatal_group.add_to(m)
 city_group.add_to(m)
 
-# Add layer control
+
 folium.LayerControl().add_to(m)
 
-# Add legend
+
 colormap = LinearColormap(
     ['green', 'yellow', 'orange', 'red'],
     vmin=0, vmax=1,
@@ -177,7 +172,7 @@ colormap = LinearColormap(
 )
 colormap.add_to(m)
 
-# Add title with CSS
+
 title_html = '''
 <div style="position: fixed; 
             top: 10px; left: 50px; width: 350px; height: 70px; 
@@ -194,7 +189,7 @@ title_html = '''
 '''
 m.get_root().html.add_child(folium.Element(title_html))
 
-# Save map
+
 os.makedirs('models', exist_ok=True)
 m.save('models/hotspot_map.html')
 

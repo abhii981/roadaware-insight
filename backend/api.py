@@ -522,7 +522,7 @@ def chat(data: ChatRequest):
     try:
         prompt   = f"{SYSTEM_PROMPT}\n\nUser: {data.message}\nAssistant:"
         response = google_client.models.generate_content(
-            model="gemini-2.0-flash",
+            model="gemini-2.5-flash",
             contents=prompt
         )
         return {"reply": response.text}

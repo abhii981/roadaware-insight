@@ -16,7 +16,4 @@ for col in cat_cols:
 severity_map={'minor':0, 'major':1, 'fatal':2}
 df['severity_label']=df['accident_severity'].map(severity_map)
 
-#print(df.shape)
 print(df.isnull().sum().sum(), "missing values remaining")
-#print(df.head(3))
-#for col in df.columns
